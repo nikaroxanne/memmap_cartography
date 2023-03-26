@@ -1,5 +1,6 @@
-#!/usr/bin/python
-
+#!/bin/python3
+import os, sys
+import argparse
 import graphviz
 
 mem=graphviz.Digraph('ivt-mem', filename='ivt-mem-graph.gv',
