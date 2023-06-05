@@ -19,39 +19,55 @@ def int_range(input_str_tuple: str):
     return range_str
 
 
-@dataclass
-class Memmap_Entry:
-    out_filename: str = ""
-    node_info: Optional = ()
-    label: Optional = ""
-    mem=graphviz.Digraph('ivt-mem', filename=out_filename,format='png',
-                 node_attr={'shape':'record', 'style':'filled',
-                    'fillcolor':'green:pink', 'fontsize':'18', 
-                    'fontname':'Fixedsys', 'fontweight':'12', 'padding':'10'})
-    mem.attr(bgcolor='black', style='filled') 
-    #mem.format = 'png'
+#@dataclass
+#class Memmap_Entry:
+#    out_filename: str = ""
+#    node_info: Optional = ()
+#    label: Optional = ""
+class Memmap_Entry(graphviz.Digraph):
+    def __init__(self, out_filename, node_info, label):
+        self.out_filename: str = ""
+        self.node_info: Optional = ()
+        self.label: Optional = ""
+        self.mem=graphviz.Digraph('ivt-mem', filename=out_filename,format='png',
+                     node_attr={'shape':'record', 'style':'filled',
+                        'fillcolor':'red:lightgrey', 'fontsize':'18', 
+                        'fontname':'Fixedsys', 'fontweight':'12', 'padding':'10'})
+        #mem.subgraph: Optional = graphviz.Digraph.subgraph(self)
+        #subgraphname: Optional = ""
+        self.mem.attr(bgcolor='black', style='filled')
+        #self.mem.format = 'png'
+    #    self.format = 'png'
     #def set_graph_attrs(node_info):
     #    for k,v in node_info.items():
     #        mem.attr(k=v)    
 
-    @classmethod
-    def from_input(cls, out_filename, nodeinfo, label):
+#    @classmethod
+#    def from_input(cls, out_filename, nodeinfo, label):
         #info_new=[item[1] for item in info]
-        return cls(out_filename, nodeinfo, label) 
+#       return cls(out_filename, nodeinfo, label) 
     
+ #   @classmethod
+ #   def subgraph(cls):
+ #       return cls.subgraph()
+        #info_new=[item[1] for item in info]
     def add_node(self, nodeinfo, label):
         new_node=self.mem.node(name=nodeinfo, label=label)
-#        self.mem.node_attr.update={'style':'filled', 'fillcolor':'lightblue:violet', 'width':'2'}
+        self.mem.node_attr.update(style='filled', fillcolor='lightblue:violet', width='2')
+#        self.mem.node_attr.update{'style':'filled', 'fillcolor':'lightblue:violet', 'width':'2'}
         return self.mem
-    def add_edge(self, startnode, endnode):
-        new_node=self.mem.edge(tail_name=startnode, head_name=endnode)
-        self.mem.edge_attr.update(fontcolor='white', style='bold', weight='10', color='green')
+#
+##    def add_edge(self, startnode, endnode):
+##       new_node=self.mem.edge(tail_name=startnode, head_name=endnode)
+##        self.mem.edge_attr.update(fontcolor='white', style='bold', weight='10', color='green')
         #new_node=self.mem.edge(tail_name=startnode, head_name=endnode, label=label)
-       # self.mem.edge_attr={'style':'filled', 'fillcolor':'lightblue:violet', 'width':'2'}
-        return self.mem
+#       # self.mem.edge_attr={'style':'filled', 'fillcolor':'lightblue:violet', 'width':'2'}
+##        return self.mem
      
+#    def subgraph(self):
+#        return self.mem.subgraph()
     def render(self):
-        self.mem.render(outfile=self.out_filename)
+        self.mem.render(outfile=self.mem.filename)
         #self.mem.render(outfile=self.out_filename, format='png')
     
     def view(self):
@@ -60,18 +76,19 @@ class Memmap_Entry:
         #return cls(output_filename, nodeinfo, label) 
 
 def create_basic_graph(output_filename, jsonfile, node_info_list: Optional, node_labels: Optional):
-    output_filename += '.png'
+    #output_filename += '.png'
     print("output_filename: {0}".format(output_filename))
     graph_label="test_graph"    
     graph_info="test_graph"    
     if jsonfile == None:
         node_info = list(zip(node_info_list, node_labels))
         print("node_info: {0}".format(node_info))
-        #output_filename += '.png'
-        #print("output_filename: {0}".format(output_filename))
+        output_filename += '.png'
+        print("output_filename: {0}".format(output_filename))
         #graph_label="test_graph"    
         #graph_info="test_graph"    
-        graph_skeleton = Memmap_Entry.from_input(output_filename, graph_info, graph_label)
+        #graph_skeleton = Memmap_Entry.from_input(output_filename, graph_info, graph_label)
+        graph_skeleton = Memmap_Entry(output_filename, graph_info, graph_label)
         graph_nodes = [[]] * len(node_info)
         print("graph_nodes: {0}".format(graph_nodes))
         for elem in node_info:
@@ -88,25 +105,44 @@ def create_basic_graph(output_filename, jsonfile, node_info_list: Optional, node
             graph_skeleton.view()
     else:
         #graph_json={}
-        graph_skeleton = Memmap_Entry.from_input(output_filename, graph_info, graph_label)
+        #graph_skeleton = Memmap_Entry.from_input(output_filename, graph_info, graph_label)
+        graph_skeleton = Memmap_Entry(output_filename, graph_info, graph_label)
         with open(jsonfile, 'r') as j:
             try:
                 graph_json=json.load(j)
-                json_nodes=graph_json['Nodes']
+                json_subgraphs=graph_json['Nodes'][0]['Subgraph']
                 json_edges=graph_json['Edges']
-                for node in json_nodes:
-                    info=node['name']
-                    label=node['label']
-                    graph_with_node = graph_skeleton.add_node(info, label)
+                for subgraph in json_subgraphs:
+                    print("subgraph from json {0}".format(subgraph))
+                    subgraph_name=subgraph['name']
+                    subgraph_nodes=subgraph['nodes']
+                    subgraph_edges=subgraph['edges']
+                    with graph_skeleton.mem.subgraph(name="cluster_"+subgraph_name) as part_g:
+                        part_g.attr(label=subgraph_name, style='filled', color='black', fillcolor='green:pink', fontsize="18", width='4') 
+                        #part_g.node_attr.update(shape='box', color='grey')
+                        print("subgraph {0}".format(part_g))
+                        for node in subgraph_nodes:
+                            info=node['name']
+                            label=node['label']
+                            #graph_with_node = part_g.node(info, label)
+                            part_g.node(info, label)
+                        for edge in subgraph_edges:
+                            subgraphnode_start=edge['startnode']
+                            subgraphnode_end=edge['destnode']
+                            part_g.edge(subgraphnode_start, subgraphnode_end)
+                            part_g.edge_attr.update(style='bold', weight='10', color='black')
+                        print("subgraph {0}".format(part_g))
                 for edge in json_edges:
                     startnode=edge['startnode']
                     endnode=edge['destnode']
                     #label=edge['label']
-                    graph_with_edge = graph_skeleton.add_edge(startnode, endnode)
+                    #graph_with_edge = graph_skeleton.add_edge(startnode, endnode)
+                    graph_skeleton.mem.edge(startnode, endnode)
+                    graph_skeleton.mem.edge_attr.update(style='bold', weight='10', color='green')
             except OSError as e:
                 print(f"Error opening file: {0}", e)
-    graph_skeleton.render()
-    graph_skeleton.view()
+        graph_skeleton.mem.render()
+        graph_skeleton.mem.view()
     return graph_skeleton
 
 def generate_nodenames(rangevals, ivtnodename_entries, curr_f_index):

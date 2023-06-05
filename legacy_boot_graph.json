@@ -1,57 +1,76 @@
 {
 	"Nodes": [
+		{"Subgraph": [{"name": "BIOS Initialization", "nodes": [ 
 			{
 				"name": "node0", 
 				"label":"CPU begins executing at F000:FFF0"
 			},
-			{"name": "node1", "label":"BIOS initialization (includes setting up the IVT)"},
-			{"name": "nodef0", "label":"If floppy disk present"},
-			{"name": "nodef1", "label":"BIOS attempts to retrieve first sector (Track 0, Head 0, Sector 1) from disk in floppy disk drive A:"},
-			{"name": "nodef2", "label":"If no disk found in floppy disk drive A:"},
-			{"name": "nodef3", "label":"If disk found in floppy disk drive A:, read boot sector from (T 0, H 0, S 1) into memory at 0x0000:0x7C00"},
-			{"name": "nodef4", "label":"If BIOS check for last two bytes of boot sector != 0x55AA"},
-			{"name": "nodef5", "label":"If BIOS check for last two bytes of boot sector == 0x55AA"},
+				{"name": "node1", "label":"BIOS initialization (includes setting up the IVT)"}
+			], "edges": [
+
+			]},
+			{"name": "Floppy Disk boot process", "nodes": [
+				{"name": "nodef0", "label":"If floppy disk present"},
+				{"name": "nodef1", "label":"BIOS attempts to retrieve first sector (Track 0, Head 0, Sector 1) \\n from disk in floppy disk drive A:"},
+				{"name": "nodef2", "label":"If no disk found in floppy disk drive A:"},
+				{"name": "nodef3", "label":"If disk found in floppy disk drive A:, \\n read boot sector from (T 0, H 0, S 1) \\n into memory at 0x0000:0x7C00"},
+				{"name": "nodef4", "label":"If BIOS check for last two bytes of boot sector != 0x55AA"},
+				{"name": "nodef5", "label":"If BIOS check for last two bytes of boot sector == 0x55AA"}
+			], "edges": [
+
+				{"startnode":"nodef0", "destnode":"nodef1"},
+				{"startnode":"nodef1", "destnode":"nodef2"},
+				{"startnode":"nodef1", "destnode":"nodef3"},
+				{"startnode":"nodef3", "destnode":"nodef4"},
+				{"startnode":"nodef3", "destnode":"nodef5"}
+			]},{"name": "Hard Disk boot process", "nodes": [
+
 			{"name": "nodehd0", "label":"If hard disk present"},
-			{"name": "nodehd1", "label":"BIOS attempts to retrieve first sector (Track 0, Head 0, Sector 1) from disk in harddisk drive C:"},
-			
+			{"name": "nodehd1", "label":"BIOS attempts to retrieve first sector \\n (Track 0, Head 0, Sector 1) \n from disk in hard disk drive C:"},
 			{"name": "nodehd2", "label":"If valid MBR"},
 			{"name": "nodehd3", "label":"If corrupt/invalid MBR"},
 			{"name": "nodehd4", "label":"Active partition found in MBR partition table"},
 			{"name": "nodehd5", "label":"No active partition found in MBR partition table"},
 			{"name": "nodehd6", "label":"Move/save MBR to fixed location in memory"},
-			{"name": "nodehd7", "label":"BIOS attempts to read OS boot sector from first sector of active partition (using values of the start and end sectors from the MBR partition table entry) into memory at 0x0000:0x7C00"},
+			{"name": "nodehd7", "label":"BIOS attempts to read OS boot sector \\n from first sector of active partition \\n (using values of the start and end sectors from MBR partition table entry)\\n into memory at 0x0000:0x7C00"},
 			{"name": "nodehd8", "label":"If unsuccessful read of OS boot sector into 0x0000:0x7C00"},
-			{"name": "nodehd9", "label":"If successful read of OS boot sector into 0x0000:0x7C00"},
-			{"name": "nodeboot", "label":"BIOS assumes valid boot sector found; BIOS transfers control to boot sector loaded in memory at  0x0000:0x7C00"},
+			{"name": "nodehd9", "label":"If successful read of OS boot sector into 0x0000:0x7C00"}
+			], "edges": [
 
-			{"name": "nodee0", "label":"BIOS Boot sector error handling"}
-	],
+				{"startnode":"nodehd0", "destnode":"nodehd1"},
+				{"startnode":"nodehd1", "destnode":"nodehd2"},
+				{"startnode":"nodehd1", "destnode":"nodehd3"},
+				{"startnode":"nodehd2", "destnode":"nodehd4"},
+				{"startnode":"nodehd2", "destnode":"nodehd5"},
+				{"startnode":"nodehd4", "destnode":"nodehd6"},
+				{"startnode":"nodehd6", "destnode":"nodehd7"},
+				{"startnode":"nodehd7", "destnode":"nodehd8"},
+				{"startnode":"nodehd7", "destnode":"nodehd9"}
+			]
+},{"name": "Final Step in Successful Boot", "nodes": [
+
+			{"name": "nodeboot", "label":"BIOS assumes valid boot sector found;\\n BIOS transfers control to boot sector \\n loaded in memory at 0x0000:0x7C00"}
+			], "edges": [
+
+			]},
+			{"name": "Error Handling in Boot Process", "nodes": [
+
+				{"name": "nodee0", "label":"BIOS Boot sector error handling"}
+			], "edges": [
+
+			]}
+	]}],
 	"Edges":[
 		{
 			"startnode":"node0", "destnode":"node1"
 		},
 		{"startnode":"node1", "destnode":"nodef0"},
 		{"startnode":"node1", "destnode":"nodehd0"},
-		{"startnode":"nodef0", "destnode":"nodef1"},
-		{"startnode":"nodef1", "destnode":"nodef2"},
-		{"startnode":"nodef1", "destnode":"nodef3"},
 		{"startnode":"nodef2", "destnode":"nodehd0"},
-		{"startnode":"nodef3", "destnode":"nodef4"},
-		{"startnode":"nodef3", "destnode":"nodef5"},
-		{"startnode":"nodef5", "destnode":"nodeboot"},
 		{"startnode":"nodef4", "destnode":"nodee0"},
-		{"startnode":"nodehd0", "destnode":"nodehd1"},
-		{"startnode":"nodehd1", "destnode":"nodehd2"},
-		{"startnode":"nodehd1", "destnode":"nodehd3"},
 		{"startnode":"nodehd3", "destnode":"nodee0"},
-		{"startnode":"nodehd2", "destnode":"nodehd4"},
-		{"startnode":"nodehd2", "destnode":"nodehd5"},
 		{"startnode":"nodehd5", "destnode":"nodee0"},
-		{"startnode":"nodehd4", "destnode":"nodehd6"},
-		{"startnode":"nodehd6", "destnode":"nodehd7"},
-		{"startnode":"nodehd7", "destnode":"nodehd8"},
 		{"startnode":"nodehd8", "destnode":"nodee0"},
-		{"startnode":"nodehd7", "destnode":"nodehd9"},
 		{"startnode":"nodef5", "destnode":"nodeboot"},
 		{"startnode":"nodehd9","destnode": "nodeboot"}
 	]
